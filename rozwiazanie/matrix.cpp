@@ -9,9 +9,13 @@ int CreateMatrix( double*** pTab, int nSize )
 {
 	try {
 		*pTab = ( double** )malloc( nSize * sizeof( double* ) );
+		if( !pTab )
+			return 0;
 		for ( int i = 0; i < nSize; i++ )
 		{
 			( *pTab )[ i ] = ( double* )malloc( nSize * sizeof( double ) );
+			if ( !(pTab[ i ]) )
+				return 0;
 			memset( ( *pTab )[ i ], 0, nSize * sizeof( double ) );
 		}
 	}
@@ -59,7 +63,7 @@ void InverseMatrix( double** pInv, double **pTab, int nSize, double det )
 double Det( double** pTab, int nSize )
 {
 	if ( nSize == 1 )
-		return pTab[ 0 ][ 0 ];
+		return **pTab;
 	if ( nSize == 2 )
 	{
 		return pTab[ 0 ][ 0 ] * pTab[ 1 ][ 1 ] - pTab[ 0 ][ 1 ] * pTab[ 1 ][ 0 ];
@@ -123,19 +127,21 @@ void Complement( double** pTabO, double** pTabI, int nRow, int nCol, int nDim )
 		if ( i == nRow )
 		{
 			pTabI++;
+			continue;
 		}
-		else
+
+		double *pI = *pTabI++;
+		double *pO = *pTabO++;
+		for ( int j = 0; j < nDim; j++ )
 		{
-			double *pI = *pTabI++;
-			double *pO = *pTabO++;
-			for ( int j = 0; j < nDim; j++ )
+			if ( j == nCol )
 			{
-				if ( j == nCol )
-					pI++;
-				else
-					*pO++ = *pI++;
+				pI++;
+				continue;
 			}
+			*pO++ = *pI++;
 		}
+
 	}
 }
 

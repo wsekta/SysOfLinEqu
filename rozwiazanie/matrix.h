@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _MATRIX_
+#define _MATRIX_
 
 #include <stdlib.h>
 #include <memory.h>
@@ -10,3 +11,5 @@ void InverseMatrix( double** pInv, double **pTab, int nSize, double det ); //odw
 double Det( double** pTab, int nSize ); //wyznacznik
 void LayoutEqu( double** pInv, double* pB, double* pRes, int nSize );
 void PrintMatrix( double** pTab, int nSize );
+
+#endif // !_MATRIX_
