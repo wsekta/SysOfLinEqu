@@ -3,26 +3,26 @@ void Complement( double** pTabO, double** pTabI, int nRow, int nCol, int nDim );
 void ComplMatrix( double** pTabD, double** pTab, int nDim );
 void TransMatrix( double** pTab, int nDim );
 
-
 //====================================
 int CreateMatrix( double*** pTab, int nSize )
 {
-	try {
-		*pTab = ( double** )malloc( nSize * sizeof( double* ) );
-		if( !pTab )
-			return 0;
-		for ( int i = 0; i < nSize; i++ )
-		{
-			( *pTab )[ i ] = ( double* )malloc( nSize * sizeof( double ) );
-			if ( !(pTab[ i ]) )
-				return 0;
-			memset( ( *pTab )[ i ], 0, nSize * sizeof( double ) );
-		}
-	}
-	catch ( ... )
-	{
+	//try {
+	*pTab = ( double** )malloc( nSize * sizeof( double* ) );
+	if ( !pTab )
 		return 0;
+	double **pV = *pTab;
+	for ( int i = 0; i < nSize; i++ )
+	{
+		*pV = ( double* )malloc( nSize * sizeof( double ) ); //!!!!
+		if ( !*pV )
+			return 0;
+		memset( *pV++, 0, nSize * sizeof( double ) );
 	}
+	//}
+	//catch ( ... )
+	//{
+	//	return 0;
+	//}
 	return 1;
 }
 
@@ -45,9 +45,15 @@ void DeleteMatrix( double*** pTab, int nSize )
 void InverseMatrix( double** pInv, double **pTab, int nSize, double det )
 {
 	ComplMatrix( pInv, pTab, nSize );
-	//PrintMatrix( pInv, nSize );
+#ifdef _DEBUG_
+	printf( "\nInverseMatrix: macierz dopelnien\n" );
+	PrintMatrix( pInv, nSize ); //!!!
+#endif // _DEBUG_
 	TransMatrix( pInv, nSize );
-	//PrintMatrix( pInv, nSize );
+#ifdef _DEBUG_
+	printf( "\nInverseMatrix: transponowana macierz dopelnien\n" );
+	PrintMatrix( pInv, nSize;
+#endif // _DEBUG_
 	for ( int i = 0; i < nSize; i++ )
 	{
 		double *pV = *pInv++;
@@ -66,23 +72,34 @@ double Det( double** pTab, int nSize )
 		return **pTab;
 	if ( nSize == 2 )
 	{
-		return pTab[ 0 ][ 0 ] * pTab[ 1 ][ 1 ] - pTab[ 0 ][ 1 ] * pTab[ 1 ][ 0 ];
+		return **pTab * pTab[ 1 ][ 1 ] - pTab[ 0 ][ 1 ] * pTab[ 1 ][ 0 ];
 	}
 	else
 	{
 		double res = 0;
 		double **pPomTab = NULL;
-		CreateMatrix( &pPomTab, nSize - 1 );
+		if ( !CreateMatrix( &pPomTab, nSize - 1 ) )
+		{
+			perror( "Det: Blad alokowania pamieci" );
+			return 1;
+		}
 		double *pV = *pTab;
+		double sgn = 1;
 		for ( int i = 0; i < nSize; i++ )
 		{
 			Complement( pPomTab, pTab, 0, i, nSize );
-			res += ( i % 2 ? -1 : 1 ) * *pV++ * Det( pPomTab, nSize - 1 ); // rozwinêcie Laplace'a
+			res += sgn * *pV++ * Det( pPomTab, nSize - 1 ); // rozwinêcie Laplace'a
+			sgn = -sgn;
+
+		#ifdef _DEBUG_
+			printf( "\nDet: wyznacznik dopelnienia\n" );
+			PrintMatrix( pPomTab, nSize );//!!!
+		#endif // _DEBUG_
 		}
 		DeleteMatrix( &pPomTab, nSize - 1 );
 		return res;
+		}
 	}
-}
 
 
 
@@ -152,16 +169,22 @@ void Complement( double** pTabO, double** pTabI, int nRow, int nCol, int nDim )
 void ComplMatrix( double** pTabD, double** pTab, int nDim )
 {
 	double **pPomTab = NULL;
-	CreateMatrix( &pPomTab, nDim - 1 );
+	if ( !CreateMatrix( &pPomTab, nDim - 1 ) )
+	{
+		perror( "ComplMatrix: Blad alokowania pamieci" );
+		return;
+	}
 	double **pTabCopy = pTab;
 	for ( int i = 0; i < nDim; i++ )
 	{
 		double *pI = *pTabCopy++;
 		double *pO = *pTabD++;
+		double sgn = i % 2 ? -1 : 1;
 		for ( int j = 0; j < nDim; j++ )
 		{
 			Complement( pPomTab, pTab, i, j, nDim );
-			*pO++ = ( ( i + j ) % 2 ? -1 : 1 ) * Det( pPomTab, nDim - 1 );
+			*pO++ = sgn * Det( pPomTab, nDim - 1 );
+			sgn = -sgn;
 		}
 	}
 	DeleteMatrix( &pPomTab, nDim - 1 );
@@ -175,10 +198,12 @@ void TransMatrix( double** pTab, int nDim )
 {
 	for ( int i = 0; i < nDim; i++ )
 	{
-		for ( int j = i + 1; j < nDim; j++ )
+		double *pV = *( pTab + i ) + i + 1;
+
+		for ( int j = i + 1; j < nDim; j++)
 		{
-			double pom = pTab[ i ][ j ];
-			pTab[ i ][ j ] = pTab[ j ][ i ];
+			double pom = *pV;    //!!!!
+			*pV++ = pTab[ j ][ i ];
 			pTab[ j ][ i ] = pom;
 		}
 	}
